@@ -16,18 +16,19 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class MayaWorldGame extends ApplicationAdapter {
 	static final int LAYERS = 1;
-	static final int WIDTH = 4;
-	static final int HEIGHT = 5;
+	static final int WIDTH = 16;
+	static final int HEIGHT = 20;
 	static final int TILES_PER_LAYER = WIDTH * HEIGHT;
-	static final int TILE_WIDTH = 54;
-	static final int TILE_HEIGHT = 54;
-	static final int TILE_HEIGHT_DIAMOND = 28;
+	static final int TILE_WIDTH = 64;
+	static final int TILE_HEIGHT = 64;
+	static final int TILE_HEIGHT_DIAMOND = 32;
 	static final int BOUND_X = HEIGHT * TILE_WIDTH / 2 + WIDTH * TILE_WIDTH / 2;
 	static final int BOUND_Y = HEIGHT * TILE_HEIGHT_DIAMOND / 2 + WIDTH * TILE_HEIGHT_DIAMOND / 2;
 
 	Texture texture;
 	SpriteCache[] caches = new SpriteCache[LAYERS];
 	int[] layers = new int[LAYERS];
+	int[] map = new int[WIDTH*HEIGHT];
 	OrthographicCamera cam;
 	OrthoCamController camController;
 	ShapeRenderer renderer;
@@ -40,9 +41,44 @@ public class MayaWorldGame extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(camController);
 
 		renderer = new ShapeRenderer();
-		texture = new Texture(Gdx.files.internal("tiles/isotile.png"));
+		texture = new Texture(Gdx.files.internal("tiles/tiles.png"));
 
 		Random rand = new Random();
+
+		for (int x = 0; x < WIDTH; x++) {
+			for (int y = 0; y < HEIGHT; y++) {
+				//map[y*WIDTH+x] = rand.nextInt(4);
+                map[y*WIDTH+x] = 0;
+			}
+		}
+
+
+        for (int m = 0; m < 3; m++) {
+
+            int rx = rand.nextInt(WIDTH-1) + 1;
+            int ry = rand.nextInt(HEIGHT-1) + 1;
+            int dir = rand.nextInt(4);
+            int height = rand.nextInt(10);
+
+
+
+            //map[ry*WIDTH+rx] = (dir*10)+height;
+
+            map[ry*WIDTH+rx] = (0*10)+10;
+            map[ry*WIDTH+(rx+1)] = (2*10)+8;
+            map[ry*WIDTH+(rx-1)] = (0*10)+8;
+            map[(ry+1)*WIDTH+rx] = (1*10)+8;
+            map[(ry-1)*WIDTH+rx] = (3*10)+8;
+    //        map[ry*WIDTH+rx] = (dir*10)+height;
+  //          map[ry*WIDTH+rx] = (dir*10)+height;
+//            map[ry*WIDTH+rx] = (dir*10)+height;
+
+
+
+
+        }
+
+
 		for (int i = 0; i < LAYERS; i++) {
 			caches[i] = new SpriteCache();
 			SpriteCache cache = caches[i];
@@ -54,7 +90,8 @@ public class MayaWorldGame extends ApplicationAdapter {
 				for (int y = 0; y < HEIGHT; y++) {
 					int tileX = colX - y * TILE_WIDTH / 2;
 					int tileY = colY - y * TILE_HEIGHT_DIAMOND / 2;
-					cache.add(texture, tileX, tileY, rand.nextInt(2) * 54, 0, TILE_WIDTH, TILE_HEIGHT);
+
+					cache.add(texture, tileX, tileY, map[y*WIDTH+x] * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
 				}
 				colX += TILE_WIDTH / 2;
 				colY -= TILE_HEIGHT_DIAMOND / 2;
