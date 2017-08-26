@@ -28,7 +28,9 @@ public class MayaWorldGame extends ApplicationAdapter {
 	Texture texture;
 	SpriteCache[] caches = new SpriteCache[LAYERS];
 	int[] layers = new int[LAYERS];
-	int[] map = new int[WIDTH*HEIGHT];
+	int[] tilemap = new int[WIDTH*HEIGHT];
+    int[] heightmap = new int[WIDTH*HEIGHT];
+
 	OrthographicCamera cam;
 	OrthoCamController camController;
 	ShapeRenderer renderer;
@@ -48,7 +50,8 @@ public class MayaWorldGame extends ApplicationAdapter {
 		for (int x = 0; x < WIDTH; x++) {
 			for (int y = 0; y < HEIGHT; y++) {
 				//map[y*WIDTH+x] = rand.nextInt(4);
-                map[y*WIDTH+x] = 0;
+                tilemap[y*WIDTH+x] = 0;
+                heightmap[y*WIDTH+x] = 0;
 			}
 		}
 
@@ -58,17 +61,34 @@ public class MayaWorldGame extends ApplicationAdapter {
             int rx = rand.nextInt(WIDTH-1) + 1;
             int ry = rand.nextInt(HEIGHT-1) + 1;
             int dir = rand.nextInt(4);
-            int height = rand.nextInt(10);
-
+            //int height = rand.nextInt(10);
+            int height = 4;
 
 
             //map[ry*WIDTH+rx] = (dir*10)+height;
 
-            map[ry*WIDTH+rx] = (0*10)+10;
-            map[ry*WIDTH+(rx+1)] = (2*10)+8;
-            map[ry*WIDTH+(rx-1)] = (0*10)+8;
-            map[(ry+1)*WIDTH+rx] = (1*10)+8;
-            map[(ry-1)*WIDTH+rx] = (3*10)+8;
+
+            heightmap[ry*WIDTH+rx] = 14;
+
+            tilemap[ry*WIDTH+rx] = (0*10)+0;
+
+
+
+            tilemap[ry*WIDTH+(rx+1)] = (2*10)+height;
+            tilemap[ry*WIDTH+(rx-1)] = (0*10)+height;
+            tilemap[(ry+1)*WIDTH+rx] = (1*10)+height;
+            tilemap[(ry-1)*WIDTH+rx] = (3*10)+height;
+
+            // Last 4 are diagonals
+
+            tilemap[(ry-1)*WIDTH+(rx-1)] = (4*10)+height;
+            tilemap[(ry+1)*WIDTH+(rx-1)] = (5*10)+height;
+            tilemap[(ry-1)*WIDTH+(rx+1)] = (7*10)+height;
+            tilemap[(ry+1)*WIDTH+(rx+1)] = (6*10)+height;
+
+
+
+
     //        map[ry*WIDTH+rx] = (dir*10)+height;
   //          map[ry*WIDTH+rx] = (dir*10)+height;
 //            map[ry*WIDTH+rx] = (dir*10)+height;
@@ -89,9 +109,9 @@ public class MayaWorldGame extends ApplicationAdapter {
 			for (int x = 0; x < WIDTH; x++) {
 				for (int y = 0; y < HEIGHT; y++) {
 					int tileX = colX - y * TILE_WIDTH / 2;
-					int tileY = colY - y * TILE_HEIGHT_DIAMOND / 2;
+					int tileY = (colY - y * TILE_HEIGHT_DIAMOND / 2) + heightmap[y*WIDTH+x];
 
-					cache.add(texture, tileX, tileY, map[y*WIDTH+x] * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
+					cache.add(texture, tileX, tileY, tilemap[y*WIDTH+x] * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
 				}
 				colX += TILE_WIDTH / 2;
 				colY -= TILE_HEIGHT_DIAMOND / 2;

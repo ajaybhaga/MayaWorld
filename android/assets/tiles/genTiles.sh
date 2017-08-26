@@ -1,5 +1,5 @@
 #!/bin/bash
-total_tiles=4
+total_tiles=8
 total_frames=10
 frame_list=
 
