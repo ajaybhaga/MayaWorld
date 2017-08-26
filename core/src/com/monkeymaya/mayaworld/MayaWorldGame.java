@@ -16,8 +16,8 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class MayaWorldGame extends ApplicationAdapter {
 	static final int LAYERS = 1;
-	static final int WIDTH = 16;
-	static final int HEIGHT = 20;
+	static final int WIDTH = 48;
+	static final int HEIGHT = 48;
 	static final int TILES_PER_LAYER = WIDTH * HEIGHT;
 	static final int TILE_WIDTH = 64;
 	static final int TILE_HEIGHT = 64;
@@ -38,7 +38,7 @@ public class MayaWorldGame extends ApplicationAdapter {
 
 	@Override
 	public void create () {
-		cam = new OrthographicCamera(480, 320);
+		cam = new OrthographicCamera(860, 480);
 		camController = new OrthoCamController(cam);
 		Gdx.input.setInputProcessor(camController);
 
@@ -66,30 +66,90 @@ public class MayaWorldGame extends ApplicationAdapter {
 
 
             //map[ry*WIDTH+rx] = (dir*10)+height;
-
-
+/*
+            // Middle tile
             heightmap[ry*WIDTH+rx] = 14;
-
             tilemap[ry*WIDTH+rx] = (0*10)+0;
 
-
-
+            // 4 flat sides
             tilemap[ry*WIDTH+(rx+1)] = (2*10)+height;
             tilemap[ry*WIDTH+(rx-1)] = (0*10)+height;
             tilemap[(ry+1)*WIDTH+rx] = (1*10)+height;
             tilemap[(ry-1)*WIDTH+rx] = (3*10)+height;
 
-            // Last 4 are diagonals
-
+            // 4 diagonals
             tilemap[(ry-1)*WIDTH+(rx-1)] = (4*10)+height;
             tilemap[(ry+1)*WIDTH+(rx-1)] = (5*10)+height;
             tilemap[(ry-1)*WIDTH+(rx+1)] = (7*10)+height;
             tilemap[(ry+1)*WIDTH+(rx+1)] = (6*10)+height;
+*/
 
+            int tileHeight = 14;
+            int mSize = 2;
 
+            // Middle tile
+            heightmap[ry*WIDTH+rx] += (tileHeight*2);
+            tilemap[ry*WIDTH+rx] = (0*10)+0;
 
+            // 4 flat sides
+            tilemap[ry*WIDTH+(rx+1)] = (2*10)+height;
+            heightmap[ry*WIDTH+(rx+1)] += (tileHeight);
 
-    //        map[ry*WIDTH+rx] = (dir*10)+height;
+            tilemap[ry*WIDTH+(rx-1)] = (0*10)+height;
+            heightmap[ry*WIDTH+(rx-1)] += (tileHeight);
+
+            tilemap[(ry+1)*WIDTH+rx] = (1*10)+height;
+            heightmap[(ry+1)*WIDTH+rx] += (tileHeight);
+
+            tilemap[(ry-1)*WIDTH+rx] = (3*10)+height;
+            heightmap[(ry-1)*WIDTH+rx] += (tileHeight);
+
+            // 4 diagonals
+            tilemap[(ry-1)*WIDTH+(rx-1)] = (4*10)+height;
+            heightmap[(ry-1)*WIDTH+(rx-1)] += (tileHeight);
+
+            tilemap[(ry+1)*WIDTH+(rx-1)] = (5*10)+height;
+            heightmap[(ry+1)*WIDTH+(rx-1)] += (tileHeight);
+
+            tilemap[(ry-1)*WIDTH+(rx+1)] = (7*10)+height;
+            heightmap[(ry-1)*WIDTH+(rx+1)] += (tileHeight);
+
+            tilemap[(ry+1)*WIDTH+(rx+1)] = (6*10)+height;
+            heightmap[(ry+1)*WIDTH+(rx+1)] += (tileHeight);
+
+            // 12 flat sides
+            for (int i = -1; i < 2; i++) {
+                tilemap[(ry+i) * WIDTH + (rx + 2)] = (2 * 10) + height;
+                tilemap[(ry+i)*WIDTH+(rx-2)] = (0*10)+height;
+                tilemap[(ry+2)*WIDTH+(rx+i)] = (1*10)+height;
+                tilemap[(ry-2)*WIDTH+(rx+i)] = (3*10)+height;
+            }
+
+            // 4 diagonals
+            tilemap[(ry-2)*WIDTH+(rx-2)] = (4*10)+height;
+            //heightmap[(ry-2)*WIDTH+(rx-2)] += (tileHeight);
+
+            tilemap[(ry+2)*WIDTH+(rx-2)] = (5*10)+height;
+            //heightmap[(ry+2)*WIDTH+(rx-2)] += (tileHeight);
+
+            tilemap[(ry-2)*WIDTH+(rx+2)] = (7*10)+height;
+            //heightmap[(ry-2)*WIDTH+(rx+2)] += (tileHeight);
+
+            tilemap[(ry+2)*WIDTH+(rx+2)] = (6*10)+height;
+            //heightmap[(ry+2)*WIDTH+(rx+2)] += (tileHeight);
+
+/*
+            tilemap[ry*WIDTH+(rx-1)] = (0*10)+height;
+            heightmap[ry*WIDTH+(rx-1)] += (tileHeight);
+
+            tilemap[(ry+1)*WIDTH+rx] = (1*10)+height;
+            heightmap[(ry+1)*WIDTH+rx] += (tileHeight);
+
+            tilemap[(ry-1)*WIDTH+rx] = (3*10)+height;
+            heightmap[(ry-1)*WIDTH+rx] += (tileHeight);
+*/
+
+            //        map[ry*WIDTH+rx] = (dir*10)+height;
   //          map[ry*WIDTH+rx] = (dir*10)+height;
 //            map[ry*WIDTH+rx] = (dir*10)+height;
 
@@ -113,8 +173,8 @@ public class MayaWorldGame extends ApplicationAdapter {
 
 					cache.add(texture, tileX, tileY, tilemap[y*WIDTH+x] * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
 				}
-				colX += TILE_WIDTH / 2;
-				colY -= TILE_HEIGHT_DIAMOND / 2;
+				colX += (TILE_WIDTH / 2)-1;
+				colY -= (TILE_HEIGHT_DIAMOND / 2);
 			}
 
 			layers[i] = cache.endCache();
