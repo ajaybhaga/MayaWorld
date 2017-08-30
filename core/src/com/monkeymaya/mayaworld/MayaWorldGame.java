@@ -8,7 +8,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Plane;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Intersector;
@@ -19,6 +21,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.monkeymaya.mayaworld.utils.OrthoCamController;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.monkeymaya.mayaworld.objects.Unit;
 
 public class MayaWorldGame extends ApplicationAdapter {
 	static final int LAYERS = 1;
@@ -31,10 +34,18 @@ public class MayaWorldGame extends ApplicationAdapter {
 	static final int BOUND_X = HEIGHT * TILE_WIDTH / 2 + WIDTH * TILE_WIDTH / 2;
 	static final int BOUND_Y = HEIGHT * TILE_HEIGHT_DIAMOND / 2 + WIDTH * TILE_HEIGHT_DIAMOND / 2;
 
-	Texture texture;
-    //Texture texture2;
+    static final int SPRITE_WIDTH = 128;
+    static final int SPRITE_HEIGHT = 128;
+
+    BitmapFont font = new BitmapFont(); //or use alex answer to use custom font
+
+    Texture texture;
+    Texture spriteTexture;
+
     SpriteBatch[] batches = new SpriteBatch[LAYERS];
     //final Sprite[][] sprites = new Sprite[WIDTH][HEIGHT];
+
+    Unit testUnit = new Unit(new Vector3(0,0,0));
 
     int[] tilemap = new int[WIDTH*HEIGHT];
     int[] heightmap = new int[WIDTH*HEIGHT];
@@ -44,6 +55,7 @@ public class MayaWorldGame extends ApplicationAdapter {
 	OrthographicCamera cam;
 	OrthoCamController camController;
     final Matrix4 matrix = new Matrix4();
+    final Matrix4 isoTransform = new Matrix4();
 
     ShapeRenderer renderer;
 	long startTime = TimeUtils.nanoTime();
@@ -51,18 +63,21 @@ public class MayaWorldGame extends ApplicationAdapter {
 	@Override
 	public void create () {
         cam = new OrthographicCamera(860, 480);
-        /*cam = new OrthographicCamera(10, 10 * (Gdx.graphics.getHeight() / (float)Gdx.graphics.getWidth()));
-        cam.position.set(5, 5, 10);
-        cam.direction.set(-1, -1, -1);
-        cam.near = 1;
-        cam.far = 100;
-        matrix.setToRotation(new Vector3(1, 0, 0), 90);*/
+
+        // Create the isometric transform
+        isoTransform.idt();
+        //  isoTransform.translate(0, 32, 0);
+        isoTransform.scale((float)(Math.sqrt(2.0) / 2.0), (float)(Math.sqrt(2.0) / 4.0), 1.0f);
+        isoTransform.rotate(0.0f, 0.0f, 1.0f, -45);
+        // Inverse the matrix
+        isoTransform.inv();
 
         camController = new OrthoCamController(cam);
         Gdx.input.setInputProcessor(camController);
 
         renderer = new ShapeRenderer();
         texture = new Texture(Gdx.files.internal("tiles/tiles.png"));
+        spriteTexture = new Texture(Gdx.files.internal("tiles/sprites.png"));
 
         //texture2 = new Texture(Gdx.files.internal("tiles/isotile.jpg"));
 
@@ -82,6 +97,15 @@ public class MayaWorldGame extends ApplicationAdapter {
         }
 
         initMap();
+    }
+
+    private Vector3 worldToIso(Vector3 point, int tileWidth, int tileHeight) {
+        //cam.unproject(point);
+        cam.project(point);
+        /*point.x /= tileWidth;
+        point.y = (point.y - tileHeight / 2) / tileHeight + point.x;
+        point.x -= point.y - point.x;*/
+        return point;
     }
 
     final Plane xzPlane = new Plane(new Vector3(0, 1, 0), 0);
@@ -311,6 +335,21 @@ public class MayaWorldGame extends ApplicationAdapter {
                 colY -= (TILE_HEIGHT_DIAMOND / 2);
             }
 
+
+
+            testUnit.getPosition().x += 1;
+            //(testUnit.getPosition());
+            //testUnit.getIsoPosition().mul(isoTransform);
+            Vector3 pTestUnit = cam.project(testUnit.getPosition());
+
+            testUnit.setIsoPosition(pTestUnit);
+
+            //testUnit.getIsoPosition().x += 1;
+            //testUnit.getIsoPosition().y += 1;
+            //Vector3 iso = translateScreenToIso(new Vector2(testUnit.getPosition().x, testUnit.getPosition().z));
+            batch.draw(spriteTexture, testUnit.getIsoPosition().x, testUnit.getIsoPosition().y, 0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+
+//            font.draw(batch, "Hello World!", 10, 10);
 /*
             for (int z = 0; z < HEIGHT; z++) {
                 for (int x = 0; x < WIDTH; x++) {
