@@ -8,6 +8,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Plane;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
@@ -26,31 +32,75 @@ public class MayaWorldGame extends ApplicationAdapter {
 	static final int BOUND_Y = HEIGHT * TILE_HEIGHT_DIAMOND / 2 + WIDTH * TILE_HEIGHT_DIAMOND / 2;
 
 	Texture texture;
-	SpriteBatch[] batches = new SpriteBatch[LAYERS];
-	int[] tilemap = new int[WIDTH*HEIGHT];
+    //Texture texture2;
+    SpriteBatch[] batches = new SpriteBatch[LAYERS];
+    //final Sprite[][] sprites = new Sprite[WIDTH][HEIGHT];
+
+    int[] tilemap = new int[WIDTH*HEIGHT];
     int[] heightmap = new int[WIDTH*HEIGHT];
     int[] anglemap = new int[WIDTH*HEIGHT];
     int globalAngle = 0;
 
 	OrthographicCamera cam;
 	OrthoCamController camController;
-	ShapeRenderer renderer;
+    final Matrix4 matrix = new Matrix4();
+
+    ShapeRenderer renderer;
 	long startTime = TimeUtils.nanoTime();
 
 	@Override
 	public void create () {
         cam = new OrthographicCamera(860, 480);
+        /*cam = new OrthographicCamera(10, 10 * (Gdx.graphics.getHeight() / (float)Gdx.graphics.getWidth()));
+        cam.position.set(5, 5, 10);
+        cam.direction.set(-1, -1, -1);
+        cam.near = 1;
+        cam.far = 100;
+        matrix.setToRotation(new Vector3(1, 0, 0), 90);*/
+
         camController = new OrthoCamController(cam);
         Gdx.input.setInputProcessor(camController);
 
         renderer = new ShapeRenderer();
         texture = new Texture(Gdx.files.internal("tiles/tiles.png"));
 
+        //texture2 = new Texture(Gdx.files.internal("tiles/isotile.jpg"));
+
+        /*
+        for(int z = 0; z < HEIGHT; z++) {
+            for(int x = 0; x < WIDTH; x++) {
+                sprites[x][z] = new Sprite(texture);
+                sprites[x][z].setPosition(x,z);
+                sprites[x][z].setSize(1, 1);
+                sprites[x][z].setRotation(2);
+            }
+        }*/
+
+
         for (int i = 0; i < LAYERS; i++) {
             batches[i] = new SpriteBatch();
         }
 
         initMap();
+    }
+
+    final Plane xzPlane = new Plane(new Vector3(0, 1, 0), 0);
+    final Vector3 intersection = new Vector3();
+    Sprite lastSelectedTile = null;
+
+    private void checkTileTouched() {
+        if(Gdx.input.justTouched()) {
+            Ray pickRay = cam.getPickRay(Gdx.input.getX(), Gdx.input.getY());
+            Intersector.intersectRayPlane(pickRay, xzPlane, intersection);
+            int x = (int)intersection.x;
+            int z = (int)intersection.z;
+            if(x >= 0 && x < 10 && z >= 0 && z < 10) {
+                if(lastSelectedTile != null) lastSelectedTile.setColor(1, 1, 1, 1);
+                //Sprite sprite = sprites[x][z];
+                //sprite.setColor(1, 0, 0, 1);
+                //lastSelectedTile = sprite;
+            }
+        }
     }
 
     public void initMap() {
@@ -231,8 +281,17 @@ public class MayaWorldGame extends ApplicationAdapter {
 
         for (int i = 0; i < LAYERS; i++) {
             SpriteBatch batch = batches[i];
+            //batch.setProjectionMatrix(cam.combined);
+            // Use cam.combined to calculate positions
             batch.setProjectionMatrix(cam.combined);
+            batch.setTransformMatrix(matrix);
+
             batch.begin();
+
+            // billboarding for ortho cam :)
+// dir.set(-camera.direction.x, -camera.direction.y, -camera.direction.z);
+// decal.setRotation(dir, Vector3.Y);
+
 
             int colX = HEIGHT * TILE_WIDTH / 2 - TILE_WIDTH / 2;
             int colY = BOUND_Y - TILE_HEIGHT_DIAMOND;
@@ -240,7 +299,11 @@ public class MayaWorldGame extends ApplicationAdapter {
                 for (int y = 0; y < HEIGHT; y++) {
                     int tileX = colX - y * TILE_WIDTH / 2;
                     int tileY = (colY - y * TILE_HEIGHT_DIAMOND / 2) + heightmap[y*WIDTH+x];
-                    int tileId = tilemap[y*WIDTH+x]+globalAngle;
+                    int tileMapId = tilemap[y*WIDTH+x];
+                    int tileId = tileMapId;
+                    if (tileMapId > 0) {
+                        tileId += globalAngle;
+                    }
 
                     batch.draw(texture, tileX, tileY, tileId * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
                 }
@@ -248,7 +311,28 @@ public class MayaWorldGame extends ApplicationAdapter {
                 colY -= (TILE_HEIGHT_DIAMOND / 2);
             }
 
+/*
+            for (int z = 0; z < HEIGHT; z++) {
+                for (int x = 0; x < WIDTH; x++) {
+                    //sprites[x][z].draw(batch);
+
+                    int tileX = x;
+                    int tileY = z;
+                    //cam.project(tileX, tileY);
+                    int tileId = tilemap[z*WIDTH+x]+globalAngle;
+                    //batch.draw(texture, tileX, tileY, tileId * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
+                    batch.draw(texture, tileX, tileY, 0.5f, 1.0f, tileId * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT, false, false);
+                    //batch.draw(texture2, tileX, tileY, 1.0f, 1.0f, 0, 0, 256, 256, false, false);
+                    //sprites[x][z].draw(batch);
+
+
+                }
+            }
+*/
+
             batch.end();
+            checkTileTouched();
+
         }
     }
 
