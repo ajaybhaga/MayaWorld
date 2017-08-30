@@ -1,5 +1,6 @@
 package com.monkeymaya.mayaworld;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 
 import java.util.Random;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -37,8 +39,6 @@ public class MayaWorldGame extends ApplicationAdapter {
     static final int SPRITE_WIDTH = 128;
     static final int SPRITE_HEIGHT = 128;
 
-    BitmapFont font = new BitmapFont(); //or use alex answer to use custom font
-
     Texture texture;
     Texture spriteTexture;
 
@@ -56,21 +56,24 @@ public class MayaWorldGame extends ApplicationAdapter {
 	OrthoCamController camController;
     final Matrix4 matrix = new Matrix4();
     final Matrix4 isoTransform = new Matrix4();
+    private BitmapFont font12;
 
     ShapeRenderer renderer;
 	long startTime = TimeUtils.nanoTime();
 
 	@Override
 	public void create () {
+        Gdx.app.setLogLevel(Application.LOG_DEBUG);
+ //       Gdx.app.debug("Start Up", "Create method");
         cam = new OrthographicCamera(860, 480);
 
         // Create the isometric transform
         isoTransform.idt();
-        //  isoTransform.translate(0, 32, 0);
+//        isoTransform.translate(0.0f, 0.25f, 0.0f);
         isoTransform.scale((float)(Math.sqrt(2.0) / 2.0), (float)(Math.sqrt(2.0) / 4.0), 1.0f);
-        isoTransform.rotate(0.0f, 0.0f, 1.0f, -45);
+        isoTransform.rotate(0.0f, 0.0f, 1.0f, -45.0f);
         // Inverse the matrix
-        isoTransform.inv();
+        //isoTransform.inv();
 
         camController = new OrthoCamController(cam);
         Gdx.input.setInputProcessor(camController);
@@ -78,6 +81,13 @@ public class MayaWorldGame extends ApplicationAdapter {
         renderer = new ShapeRenderer();
         texture = new Texture(Gdx.files.internal("tiles/tiles.png"));
         spriteTexture = new Texture(Gdx.files.internal("tiles/sprites.png"));
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/KOMIKAX_.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 12;
+        font12 = generator.generateFont(parameter); // font size 12 pixels
+
+        generator.dispose(); // don't forget to dispose to avoid memory leaks!
 
         //texture2 = new Texture(Gdx.files.internal("tiles/isotile.jpg"));
 
@@ -97,6 +107,8 @@ public class MayaWorldGame extends ApplicationAdapter {
         }
 
         initMap();
+        Gdx.app.log("MyTag", "my informative message");
+
     }
 
     private Vector3 worldToIso(Vector3 point, int tileWidth, int tileHeight) {
@@ -316,7 +328,7 @@ public class MayaWorldGame extends ApplicationAdapter {
 // dir.set(-camera.direction.x, -camera.direction.y, -camera.direction.z);
 // decal.setRotation(dir, Vector3.Y);
 
-
+/*
             int colX = HEIGHT * TILE_WIDTH / 2 - TILE_WIDTH / 2;
             int colY = BOUND_Y - TILE_HEIGHT_DIAMOND;
             for (int x = 0; x < WIDTH; x++) {
@@ -334,20 +346,44 @@ public class MayaWorldGame extends ApplicationAdapter {
                 colX += (TILE_WIDTH / 2)-1;
                 colY -= (TILE_HEIGHT_DIAMOND / 2);
             }
+  */
 
 
+            // Create the isometric transform
+            for (int x = 0; x < WIDTH; x++) {
+                for(int y = HEIGHT-1; y >= 0; y--) {
 
-            testUnit.getPosition().x += 1;
-            //(testUnit.getPosition());
-            //testUnit.getIsoPosition().mul(isoTransform);
-            Vector3 pTestUnit = cam.project(testUnit.getPosition());
+                    float tileX = (x * TILE_WIDTH / 2.0f) + (y * TILE_WIDTH / 2.0f);
+                    float tileY = -(x * TILE_HEIGHT_DIAMOND / 2.0f) + (y * TILE_HEIGHT_DIAMOND / 2.0f);
 
-            testUnit.setIsoPosition(pTestUnit);
+                    int tileMapId = tilemap[y*WIDTH+x];
+                    int tileId = tileMapId;
+                    if (tileMapId > 0) {
+                        tileId += globalAngle;
+                    }
 
-            //testUnit.getIsoPosition().x += 1;
-            //testUnit.getIsoPosition().y += 1;
-            //Vector3 iso = translateScreenToIso(new Vector2(testUnit.getPosition().x, testUnit.getPosition().z));
+                    batch.draw(texture, tileX, tileY, tileId * TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
+
+/*                    if(x==pickedTileX && y==pickedTileY)
+                        spriteBatch.setColor(1.0f, 0.0f, 0.0f, 1.0f);
+                    else
+                        spriteBatch.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+                    spriteBatch.draw(tileSet[map[x][y]], x_pos, y_pos, tileWidth, tileHeight);*/
+
+                }
+            }
+
+
+            testUnit.getPosition().x = TILE_WIDTH/2 * (WIDTH-2);
+            testUnit.getPosition().y += 1;//TILE_WIDTH/2 * (WIDTH-2)
+
+            float spriteX = testUnit.getPosition().x + testUnit.getPosition().y;
+            float spriteY = (testUnit.getPosition().x - testUnit.getPosition().y) / 2;
+            testUnit.setIsoPosition(new Vector3(spriteX, spriteY, 0));
+
             batch.draw(spriteTexture, testUnit.getIsoPosition().x, testUnit.getIsoPosition().y, 0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+
+            font12.draw(batch, "Test Unit Position: " + testUnit.getIsoPosition().x, testUnit.getIsoPosition().x, testUnit.getIsoPosition().y+20);
 
 //            font.draw(batch, "Hello World!", 10, 10);
 /*
