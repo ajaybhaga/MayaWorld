@@ -11,6 +11,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.IsometricTiledMapRenderer;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -58,6 +61,10 @@ public class MayaWorldGame extends ApplicationAdapter {
     final Matrix4 isoTransform = new Matrix4();
     private BitmapFont font12;
 
+    private TiledMap map;
+    private IsometricTiledMapRenderer isoRenderer;
+    private OrthographicCamera camera;
+
     ShapeRenderer renderer;
 	long startTime = TimeUtils.nanoTime();
 
@@ -65,7 +72,14 @@ public class MayaWorldGame extends ApplicationAdapter {
 	public void create () {
         Gdx.app.setLogLevel(Application.LOG_DEBUG);
  //       Gdx.app.debug("Start Up", "Create method");
-        cam = new OrthographicCamera(860, 480);
+        //cam = new OrthographicCamera(860, 480);
+
+
+        //cam = new OrthographicCamera();
+        //cam.setToOrtho(false, 30, 20);
+
+        cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 
         // Create the isometric transform
         isoTransform.idt();
@@ -107,7 +121,15 @@ public class MayaWorldGame extends ApplicationAdapter {
         }
 
         initMap();
-        Gdx.app.log("MyTag", "my informative message");
+
+
+        //Gdx.app.log("MyTag", "my informative message");
+
+        TiledMap map = new TmxMapLoader().load("maps/base2.tmx");
+        isoRenderer = new IsometricTiledMapRenderer(map);
+
+        //isoRenderer.getSpriteBatch().setShader(null);
+
 
     }
 
@@ -429,7 +451,14 @@ public class MayaWorldGame extends ApplicationAdapter {
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-        genMap();
+//        genMap();
+
+//        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+  //      Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+
+        isoRenderer.setView(cam);
+        isoRenderer.render();
 
 		renderer.setProjectionMatrix(cam.combined);
 		renderer.begin(ShapeType.Line);
